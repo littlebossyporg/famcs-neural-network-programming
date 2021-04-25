@@ -6,6 +6,9 @@ from keras.utils import np_utils
 # Пакет для обработки пикчей
 from PIL import Image
 
+# Загрузите сохраненную нейронную сеть распознавания рукописных цифр. Проверьте точность загруженной сети на тестовых
+# данных.
+
 # Загружаем данные об архитектуре сети из файла json
 json_filename = "mnist_model.json"
 with open(json_filename, "r") as json_file:
@@ -16,7 +19,7 @@ model = model_from_json(loaded_model_json)
 h5_filename = "mnist_model.h5"
 model.load_weights(h5_filename)
 # Перед использованием загруженной нейронной сети необходимо её скомпилировать
-model.compile(loss="categorical_crossentropy", optimizer="SGD", 
+model.compile(loss="categorical_crossentropy", optimizer="SGD",
               metrics=["accuracy"])
 # Вывести начальные характеристики нейросети
 print(model.summary())
@@ -32,11 +35,11 @@ print("Точность работы на тестовых данных : %.2f%%
 # Загрузка чёрно-белого изображения 28х28, на котором изображена цифра
 pic_name = "3_1.png"
 img = Image.open(pic_name)
-# Преобразование этой картинки в массив нужной размерности согласно её RGB 
-# схеме (белый пиксель - это (255, 255, 255), чёрный - (0, 0, 0)). Для 
+# Преобразование этой картинки в массив нужной размерности согласно её RGB
+# схеме (белый пиксель - это (255, 255, 255), чёрный - (0, 0, 0)). Для
 # изображения png размерность этого массива составит (28, 28, 3)
 arr = numpy.array(img)
-# Составление нового массива размерности (1, 784) (тут уже 0 - это белый цвет, 
+# Составление нового массива размерности (1, 784) (тут уже 0 - это белый цвет,
 # 255 - чёрный)
 new_arr = numpy.array([[255 - pixel[0] for row in arr for pixel in row]], 'float32')
 # Нормировка данных
@@ -46,3 +49,5 @@ result = model.predict(new_arr)
 for i, perc in enumerate(numpy.round(100 * result)[0]):
     print("%d: %d%%" % (i, perc))
 print("result = %d" % numpy.argmax(result))
+
+# Точность работы на тестовых данных : 98.09%
