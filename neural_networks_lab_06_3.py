@@ -1,0 +1,52 @@
+import numpy
+from keras.models import model_from_json
+from keras.datasets import mnist
+# Утилиты для работы с массивами
+from keras.utils import np_utils
+# Пакет для обработки пикчей
+from PIL import Image
+
+# Используйте загруженную сеть для распознавания созданной Вами рукописной цифры, равной числу букв в Вашем имени.
+# число букв в имени Елизавета рано 9
+
+# Загружаем данные об архитектуре сети из файла json
+json_filename = "mnist_model.json"
+with open(json_filename, "r") as json_file:
+    loaded_model_json = json_file.read()
+# Создаем модель на основе загруженных данных
+model = model_from_json(loaded_model_json)
+# Загружаем веса в модель
+h5_filename = "mnist_model.h5"
+model.load_weights(h5_filename)
+# Перед использованием загруженной нейронной сети необходимо её скомпилировать
+model.compile(loss="categorical_crossentropy", optimizer="SGD",
+              metrics=["accuracy"])
+pic_name = "9.png"
+img = Image.open(pic_name)
+# Преобразование этой картинки в массив нужной размерности согласно её RGB
+# схеме (белый пиксель - это (255, 255, 255), чёрный - (0, 0, 0)). Для
+# изображения png размерность этого массива составит (28, 28, 3)
+arr = numpy.array(img)
+# Составление нового массива размерности (1, 784) (тут уже 0 - это белый цвет,
+# 255 - чёрный)
+new_arr = numpy.array([[255 - pixel[0] for row in arr for pixel in row]], 'float32')
+# Нормировка данных
+new_arr /= 255
+# Работа загруженной нейронной сети со сформированным массивом пикселей
+result = model.predict(new_arr)
+for i, perc in enumerate(numpy.round(100 * result)[0]):
+    print("%d: %d%%" % (i, perc))
+print("result = %d" % numpy.argmax(result))
+
+'''Точность работы на тестовых данных : 98.09%
+0: 0%
+1: 0%
+2: 0%
+3: 46%
+4: 0%
+5: 0%
+6: 0%
+7: 0%
+8: 1%
+9: 53%
+result = 9'''
