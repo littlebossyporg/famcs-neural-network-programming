@@ -1,27 +1,30 @@
-import numpy as np
-from keras.preprocessing import image
-from keras.models import model_from_json
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+from keras.applications.vgg16 import preprocess_input
+from keras.applications.vgg16 import decode_predictions
+from keras.applications.vgg16 import VGG16
 
 # Используйте предварительно обученную сеть VGG16 в Keras для распознавания своего изображения.
 
-json_file = open("mnist_model_7_1.json", "r")
-loaded_model_json = json_file.read()
-json_file.close()
-loaded_model = model_from_json(loaded_model_json)
-loaded_model.load_weights("mnist_model_7_1.h5")
-loaded_model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-print("Загрузили Model")
-img_path = 'корабль.png'
-img = image.load_img(img_path, target_size=(32, 32))
-x = image.img_to_array(img)
-x /= 255
-x = np.expand_dims(x, axis=0)
-prediction = loaded_model.predict(x)
-print(prediction)
-classes = ['велосипед', 'автомобиль', 'птица', 'кот', 'олень', 'собака', 'лягушка', 'лошадь', 'корабль', 'грузовик']
-print(classes[np.argmax(prediction)])
+# load the model
+model = VGG16()
+# load an image from file
+image = load_img('корабль.png', target_size=(224, 224))
+# convert the image pixels to a numpy array
+image = img_to_array(image)
+# reshape data for the model
+image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
+# prepare the image for the VGG model
+image = preprocess_input(image)
+# predict the probability across all output classes
+yhat = model.predict(image)
+# convert the probabilities to class labels
+label = decode_predictions(yhat)
+# retrieve the most likely result, e.g. highest probability
+label = label[0][0]
+# print the classification
+print('%s (%.2f%%)' % (label[1], label[2] * 100))
 
-'''[[4.7443162e-08 3.5568984e-10 2.0953497e-09 1.2010206e-12 1.4315407e-11
-  1.0075057e-13 1.2892323e-12 2.1419507e-11 9.9999988e-01 8.3762330e-08]]
-корабль
-'''
+# В качестве результатов выполнения работы нужно показать результаты распознавания
+'''mountain_bike (98.98%) для велосипед.jpg'''
+'''aircraft_carrier (72.90%) для корабль.png'''
