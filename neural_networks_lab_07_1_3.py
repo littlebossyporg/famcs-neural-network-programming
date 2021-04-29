@@ -1,64 +1,52 @@
 import numpy
-from keras.datasets import cifar10
+from keras.datasets import mnist
 from keras.models import Sequential
-from keras.layers import Dense, Flatten, Dropout
-from keras.layers.convolutional import Conv2D, MaxPooling2D
+from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from keras.utils import np_utils
-from keras.optimizers import SGD
+from keras.backend import image_data_format
 
-# Задаем seed для повторяемости результатов
+# Обучите сверточную нейронную сеть распознаванию цифр.
+
+# Устанавливаем seed для повторяемости результатов
 numpy.random.seed(42)
 # Загружаем данные
-(X_train, y_train), (X_test, y_test) = cifar10.load_data()
-# Размер мини-выборки
-batch_size = 32
-# Количество классов изображений
-nb_classes = 10
-# Количество эпох для обучения
-nb_epoch = 1
-# Нормализуем данные
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+# Формирование вектора размерности (зависит от параметра из файла keras.json)
+input_shape = ((1, *X_train.shape[1:]) if image_data_format() == 'channels_first' else (*X_train.shape[1:], 1))
+# Преобразование размерности изображений
+X_train = X_train.reshape(X_train.shape[0], *input_shape)
+X_test = X_test.reshape(X_test.shape[0], *input_shape)
+# Нормализация данных
 X_train = X_train.astype('float32')
 X_test = X_test.astype('float32')
 X_train /= 255
 X_test /= 255
 # Преобразуем метки в категории
-Y_train = np_utils.to_categorical(y_train, nb_classes)
-Y_test = np_utils.to_categorical(y_test, nb_classes)
+Y_train = np_utils.to_categorical(y_train, 10)
+Y_test = np_utils.to_categorical(y_test, 10)
 # Создаем последовательную модель
 model = Sequential()
-# Формирование вектора, отвечающего за размерность входных данных:
-# либо (кол-во каналов, ширина, высота), либо (ширина, высота, кол-во каналов)
-# (в зависимости от значения параметра "image_data_format" в файле keras.json)
-shape_vector = X_train.shape[1:]
-# Первый сверточный слой
-model.add(Conv2D(32, (3, 3), padding='same', input_shape=shape_vector, activation='relu'))
-# Второй сверточный слой
-model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-# Первый слой подвыборки
+model.add(Conv2D(75, kernel_size=(5, 5), activation='relu', input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-# Слой регуляризации Dropout
-model.add(Dropout(0.25))
-# Третий сверточный слой
-model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
-# Четвертый сверточный слой
-model.add(Conv2D(64, (3, 3), activation='relu'))
-# Второй слой подвыборки
+model.add(Dropout(0.2))
+model.add(Conv2D(100, (5, 5), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-# Слой регуляризации Dropout
-model.add(Dropout(0.25))
-# Слой преобразования данных из 2D представления в плоское
+model.add(Dropout(0.2))
 model.add(Flatten())
-# Полносвязный слой для классификации
-model.add(Dense(512, activation='relu'))
-# Слой регуляризации Dropout
+model.add(Dense(500, activation='relu'))
 model.add(Dropout(0.5))
-# Выходной полносвязный слой
-model.add(Dense(nb_classes, activation='softmax'))
-# Задаем параметры оптимизации
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
-# Обучаем модель
-model.fit(X_train, Y_train, batch_size=batch_size, epochs=nb_epoch, validation_split=0.1, shuffle=True, verbose=1)
-# Оцениваем качество обучения модели на тестовых данных
+model.add(Dense(10, activation='softmax'))
+# Компилируем модель
+model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
+print(model.summary())
+# Обучаем сеть
+model.fit(X_train, Y_train, batch_size=200, epochs=1, validation_split=0.2, verbose=1)
+# Оцениваем качество обучения сети на тестовых данных
 scores = model.evaluate(X_test, Y_test, verbose=0)
-print("Точность работы на тестовых данных: %.2f%%" % (scores[1]*100))
+print("Точность работы на тестовых данных: %.2f%%" % (scores[1] * 100))
+model_json = model.to_json()
+json_file = open("mnist_model_7_3.json", "w")
+json_file.write(model_json)
+json_file.close()
+model.save_weights("mnist_model_7_3.h5")
+# Точность работы на тестовых данных: 98.53%

@@ -43,13 +43,13 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 # Слой регуляризации Dropout
 model.add(Dropout(0.25))
 # Третий сверточный слой
-#model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
+model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
 # Четвертый сверточный слой
-##model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(Conv2D(64, (3, 3), activation='relu'))
 # Второй слой подвыборки
-#model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(MaxPooling2D(pool_size=(2, 2)))
 # Слой регуляризации Dropout
-#model.add(Dropout(0.25))
+model.add(Dropout(0.25))
 # Слой преобразования данных из 2D представления в плоское
 model.add(Flatten())
 # Полносвязный слой для классификации
@@ -84,5 +84,6 @@ model.save_weights("mnist_model_7_1.h5")
 # лучшая точность при количестве эпох 25
 
 # Количество слоев в сети
-#
+# Точность работы на тестовых данных: 68.72%
+# увеличение количества сверточных слоев в сети увеличевает качество обучения
 
